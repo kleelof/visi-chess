@@ -261,20 +261,18 @@ function canForceSquarePossession(
     return result
   }
 
-  let result = false
-  if (sideToMove === targetSide) {
-    result = captures.some((capture) => {
-      const next = new Chess(board.fen())
-      next.move({ from: capture.from, to: capture.to, promotion: capture.promotion })
-      return canForceSquarePossession(next, destination, targetSide, memo)
-    })
-  } else {
-    result = captures.every((capture) => {
-      const next = new Chess(board.fen())
-      next.move({ from: capture.from, to: capture.to, promotion: capture.promotion })
-      return canForceSquarePossession(next, destination, targetSide, memo)
-    })
-  }
+  const result =
+    sideToMove === targetSide
+      ? captures.some((capture) => {
+          const next = new Chess(board.fen())
+          next.move({ from: capture.from, to: capture.to, promotion: capture.promotion })
+          return canForceSquarePossession(next, destination, targetSide, memo)
+        })
+      : captures.every((capture) => {
+          const next = new Chess(board.fen())
+          next.move({ from: capture.from, to: capture.to, promotion: capture.promotion })
+          return canForceSquarePossession(next, destination, targetSide, memo)
+        })
 
   memo.set(key, result)
   return result
@@ -466,6 +464,9 @@ function App() {
   const currentNode = tree.nodes[currentNodeId]
   const board = useMemo(() => new Chess(currentNode.fen), [currentNode.fen])
   const sideToMove = board.turn() as Side
+  const canGoBack = !!currentNode.parentId
+  const canGoForward = currentNode.children.length > 0
+  const currentMoveLabel = currentNode.san ?? 'Start position'
 
   const highlightedSide: Side =
     highlightSideFilter === 'turn'
@@ -621,152 +622,222 @@ function App() {
           Switch between move safety and board control overlays.
         </p>
 
-        <label className="control-label" htmlFor="pgn-input">
-          PGN Input
-        </label>
-        <textarea
-          id="pgn-input"
-          className="pgn-input"
-          value={pgnInput}
-          onChange={(event) => setPgnInput(event.target.value)}
-          rows={10}
-          spellCheck={false}
-        />
-
-        <div className="row">
-          <button className="primary" type="button" onClick={handleLoadPgn}>
-            Load PGN
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setOrientation((current) => (current === 'white' ? 'black' : 'white'))
-            }
-          >
-            Orientation: {orientation === 'white' ? 'White' : 'Black'}
-          </button>
+        <div className="control-group">
+          <div className="control-heading">
+            <label className="control-label" htmlFor="pgn-input">
+              PGN
+            </label>
+            <button className="primary" type="button" onClick={handleLoadPgn}>
+              Load game
+            </button>
+          </div>
+          <textarea
+            id="pgn-input"
+            className="pgn-input"
+            value={pgnInput}
+            onChange={(event) => setPgnInput(event.target.value)}
+            rows={8}
+            spellCheck={false}
+          />
         </div>
 
-        <div className="row">
-          <button type="button" onClick={goStart}>
-            Start
-          </button>
-          <button type="button" onClick={goPrev}>
-            Prev
-          </button>
-          <button type="button" onClick={goNext}>
-            Next
-          </button>
-          <button type="button" onClick={goEnd}>
-            End
-          </button>
+        <div className="control-group">
+          <div className="control-heading">
+            <span className="control-label">Position</span>
+            <span className="control-value">{currentMoveLabel}</span>
+          </div>
+          <div className="move-controls" aria-label="Move navigation">
+            <button
+              type="button"
+              onClick={goStart}
+              disabled={currentNode.ply === 0}
+              title="Start position"
+            >
+              |&lt;
+              <span>Start</span>
+            </button>
+            <button
+              type="button"
+              onClick={goPrev}
+              disabled={!canGoBack}
+              title="Previous move"
+            >
+              &lt;
+              <span>Back</span>
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!canGoForward}
+              title="Next move"
+            >
+              <span>Next</span>
+              &gt;
+            </button>
+            <button
+              type="button"
+              onClick={goEnd}
+              disabled={currentNode.ply === tree.maxMainlinePly}
+              title="Final main-line move"
+            >
+              <span>End</span>
+              &gt;|
+            </button>
+          </div>
         </div>
 
-        <div className="row">
-          <button
-            className={viewMode === 'safety' ? 'active' : ''}
-            type="button"
-            onClick={() => {
-              setViewMode('safety')
-              setSelectedSquare(null)
-            }}
-          >
-            View: Move safety
-          </button>
-          <button
-            className={viewMode === 'control' ? 'active' : ''}
-            type="button"
-            onClick={() => {
-              setViewMode('control')
-              setSelectedSquare(null)
-            }}
-          >
-            View: Space control
-          </button>
+        <div className="control-group compact">
+          <div className="control-heading">
+            <span className="control-label">View</span>
+          </div>
+          <div className="segmented-control" role="group" aria-label="Overlay view">
+            <button
+              className={viewMode === 'safety' ? 'active' : ''}
+              type="button"
+              aria-pressed={viewMode === 'safety'}
+              onClick={() => {
+                setViewMode('safety')
+                setSelectedSquare(null)
+              }}
+            >
+              Move safety
+            </button>
+            <button
+              className={viewMode === 'control' ? 'active' : ''}
+              type="button"
+              aria-pressed={viewMode === 'control'}
+              onClick={() => {
+                setViewMode('control')
+                setSelectedSquare(null)
+              }}
+            >
+              Board control
+            </button>
+          </div>
         </div>
 
         {viewMode === 'safety' && (
-          <>
-            <div className="row">
+          <div className="control-group compact">
+            <div className="control-heading">
+              <span className="control-label">Safety overlay</span>
+            </div>
+            <div className="segmented-control" role="group" aria-label="Safety side">
               <button
                 className={highlightSideFilter === 'turn' ? 'active' : ''}
                 type="button"
+                aria-pressed={highlightSideFilter === 'turn'}
                 onClick={() => {
                   setHighlightSideFilter('turn')
                   setSelectedSquare(null)
                 }}
               >
-                Highlight: Side to move
+                To move
               </button>
               <button
                 className={highlightSideFilter === 'white' ? 'active' : ''}
                 type="button"
+                aria-pressed={highlightSideFilter === 'white'}
                 onClick={() => {
                   setHighlightSideFilter('white')
                   setSelectedSquare(null)
                 }}
               >
-                Highlight: White only
+                White
               </button>
               <button
                 className={highlightSideFilter === 'black' ? 'active' : ''}
                 type="button"
+                aria-pressed={highlightSideFilter === 'black'}
                 onClick={() => {
                   setHighlightSideFilter('black')
                   setSelectedSquare(null)
                 }}
               >
-                Highlight: Black only
+                Black
               </button>
             </div>
 
-            <div className="row">
+            <div className="segmented-control secondary" role="group" aria-label="Move scope">
               <button
                 className={displayMode === 'all' ? 'active' : ''}
                 type="button"
+                aria-pressed={displayMode === 'all'}
                 onClick={() => {
                   setDisplayMode('all')
                   setSelectedSquare(null)
                 }}
               >
-                All legal moves
+                All moves
               </button>
               <button
                 className={displayMode === 'selected' ? 'active' : ''}
                 type="button"
+                aria-pressed={displayMode === 'selected'}
                 onClick={() => setDisplayMode('selected')}
               >
-                Selected piece only
+                Pick a piece
               </button>
             </div>
-          </>
+          </div>
         )}
 
         {viewMode === 'control' && (
-          <div className="row">
-            <button
-              className={controlSideFilter === 'both' ? 'active' : ''}
-              type="button"
-              onClick={() => setControlSideFilter('both')}
-            >
-              Control: Both
-            </button>
-            <button
-              className={controlSideFilter === 'white' ? 'active' : ''}
-              type="button"
-              onClick={() => setControlSideFilter('white')}
-            >
-              Control: White only
-            </button>
-            <button
-              className={controlSideFilter === 'black' ? 'active' : ''}
-              type="button"
-              onClick={() => setControlSideFilter('black')}
-            >
-              Control: Black only
-            </button>
+          <div className="control-group compact">
+            <div className="control-heading">
+              <span className="control-label">Board control</span>
+            </div>
+            <div className="segmented-control" role="group" aria-label="Control side">
+              <button
+                className={controlSideFilter === 'both' ? 'active' : ''}
+                type="button"
+                aria-pressed={controlSideFilter === 'both'}
+                onClick={() => setControlSideFilter('both')}
+              >
+                Both
+              </button>
+              <button
+                className={controlSideFilter === 'white' ? 'active' : ''}
+                type="button"
+                aria-pressed={controlSideFilter === 'white'}
+                onClick={() => setControlSideFilter('white')}
+              >
+                White
+              </button>
+              <button
+                className={controlSideFilter === 'black' ? 'active' : ''}
+                type="button"
+                aria-pressed={controlSideFilter === 'black'}
+                onClick={() => setControlSideFilter('black')}
+              >
+                Black
+              </button>
+            </div>
           </div>
         )}
+
+        <div className="control-group compact">
+          <div className="control-heading">
+            <span className="control-label">Board</span>
+          </div>
+          <div className="segmented-control" role="group" aria-label="Board orientation">
+            <button
+              className={orientation === 'white' ? 'active' : ''}
+              type="button"
+              aria-pressed={orientation === 'white'}
+              onClick={() => setOrientation('white')}
+            >
+              White bottom
+            </button>
+            <button
+              className={orientation === 'black' ? 'active' : ''}
+              type="button"
+              aria-pressed={orientation === 'black'}
+              onClick={() => setOrientation('black')}
+            >
+              Black bottom
+            </button>
+          </div>
+        </div>
 
         <div className="meta-card">
           <p>

@@ -26,9 +26,38 @@
 
 .control-label {
   display: block;
-  margin-bottom: 8px;
   font-weight: 700;
   color: #4e3525;
+}
+
+.control-value {
+  min-width: 0;
+  color: #6b513d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.control-group {
+  margin-top: 14px;
+  border: 1px solid #d6c3a7;
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 253, 247, 0.64);
+}
+
+.control-group.compact {
+  padding: 10px;
+}
+
+.control-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .pgn-input {
@@ -43,13 +72,6 @@
   line-height: 1.45;
   padding: 10px;
   resize: vertical;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
 }
 
 button {
@@ -69,6 +91,11 @@ button:hover {
   background: #fffdf8;
 }
 
+button:focus-visible {
+  outline: 3px solid rgba(28, 75, 124, 0.58);
+  outline-offset: 2px;
+}
+
 button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -78,8 +105,73 @@ button:disabled {
 
 button.active,
 button.primary {
-  background: #e9b46a;
+  background: #d99038;
+  border-color: #82501b;
+  color: #201206;
+}
+
+.primary {
+  min-height: 36px;
+}
+
+.move-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.move-controls button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.move-controls button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #c7b291;
+  border-radius: 10px;
+  background: rgba(106, 75, 47, 0.08);
+}
+
+.segmented-control + .segmented-control {
+  margin-top: 8px;
+}
+
+.segmented-control button {
+  width: 100%;
+  min-height: 36px;
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.segmented-control button:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.segmented-control button.active {
+  background: #f4c06d;
   border-color: #9a6a2f;
+  box-shadow: 0 2px 6px rgba(68, 40, 19, 0.12);
+}
+
+.segmented-control.secondary button.active {
+  background: #d5df8a;
+  border-color: #838f36;
 }
 
 .meta-card,
@@ -281,5 +373,29 @@ button.primary {
 
   .rank-labels {
     font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .left-panel {
+    padding: 14px;
+  }
+
+  .control-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .control-heading .primary {
+    width: 100%;
+  }
+
+  .control-value {
+    max-width: 100%;
+  }
+
+  .move-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
