@@ -2,7 +2,8 @@
 
 Uses square highlighting to help visualize piece influence on the board.
 
-<a href="[https://example.com](https://kleelof.github.io/visi-chess/)" target="_blank">Check it out!</a> ( opens in a new window )
+
+<a href="https://kleelof.github.io/visi-chess/" target="_blank">Check it out!</a> ( opens in a new window )
 
 
 This workspace now contains two apps:
