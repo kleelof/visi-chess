@@ -1,5 +1,9 @@
 # Visi Chess
 
+Uses square highlighting to help visualize piece influence on the board.
+
+[Check it out!](https://kleelof.github.io/visi-chess/)
+
 This workspace now contains two apps:
 
 - The React/Vite board viewer in `src/`
