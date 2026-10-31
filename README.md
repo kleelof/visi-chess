@@ -1,6 +1,6 @@
 # Visi Chess
 
-Uses square highlighting to help visualize piece influence on the board.
+Uses square highlighting to help visualize piece influence on the board. Works in Python and Javascript.
 
 [Check it out!](https://kleelof.github.io/visi-chess/)
 
